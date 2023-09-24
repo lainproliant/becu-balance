@@ -9,6 +9,7 @@
 import os
 
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -38,19 +39,28 @@ class Waiter:
 
 # --------------------------------------------------------------------
 def main():
-    browser = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+    options = Options()
+
+    if os.environ.get("HEADLESS", None) is not None:
+        options.add_argument("--headless")
+        options.add_argument("--window-size=1920,1080")
+
+    browser = webdriver.Chrome(
+        service=ChromeService(ChromeDriverManager().install()), options=options
+    )
+
     browser.get("https://onlinebanking.becu.org/BECUBankingWeb/Login.aspx")
 
     waiter = Waiter(browser)
-    usernameInput = waiter.wait_for('#ctlSignon_txtUserID')
-    passwordInput = waiter.wait_for('#ctlSignon_txtPassword')
-    loginButton = waiter.wait_for('#ctlSignon_btnLogin')
+    usernameInput = waiter.wait_for("#ctlSignon_txtUserID")
+    passwordInput = waiter.wait_for("#ctlSignon_txtPassword")
+    loginButton = waiter.wait_for("#ctlSignon_btnLogin")
 
     usernameInput.send_keys(env("BECU_USERNAME"))
     passwordInput.send_keys(env("BECU_PASSWORD"))
     loginButton.click()
 
-    account_table = waiter.wait_for('#AccountsBorder table.dataTableXtended')
+    account_table = waiter.wait_for("#AccountsBorder table.dataTableXtended")
     rows = account_table.find_elements(By.TAG_NAME, "tr")
     for row in rows:
         cells = row.find_elements(By.TAG_NAME, "td")
