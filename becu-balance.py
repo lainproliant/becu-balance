@@ -9,13 +9,10 @@
 import os
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.chrome import ChromeDriver
 from selenium.webdriver.remote.webdriver import WebElement
 
 
@@ -28,7 +25,7 @@ def env(key: str) -> str:
 
 # --------------------------------------------------------------------
 class Waiter:
-    def __init__(self, browser: ChromeDriver, timeout=10):
+    def __init__(self, browser: webdriver.Firefox, timeout=10):
         self._wait = WebDriverWait(browser, timeout)
 
     def wait_for(self, css_selector: str) -> WebElement:
@@ -42,31 +39,27 @@ def main():
     options = Options()
 
     if os.environ.get("HEADLESS", None) is not None:
-        options.add_argument("--headless")
-        options.add_argument("--window-size=1920,1080")
+        options.add_argument("-headless")
 
-    browser = webdriver.Chrome(
-        service=ChromeService(ChromeDriverManager().install()), options=options
-    )
+    with webdriver.Firefox(options=options) as browser:
+        browser.get("https://onlinebanking.becu.org/BECUBankingWeb/Login.aspx")
 
-    browser.get("https://onlinebanking.becu.org/BECUBankingWeb/Login.aspx")
+        waiter = Waiter(browser)
+        usernameInput = waiter.wait_for("#ctlSignon_txtUserID")
+        passwordInput = waiter.wait_for("#ctlSignon_txtPassword")
+        loginButton = waiter.wait_for("#ctlSignon_btnLogin")
 
-    waiter = Waiter(browser)
-    usernameInput = waiter.wait_for("#ctlSignon_txtUserID")
-    passwordInput = waiter.wait_for("#ctlSignon_txtPassword")
-    loginButton = waiter.wait_for("#ctlSignon_btnLogin")
+        usernameInput.send_keys(env("BECU_USERNAME"))
+        passwordInput.send_keys(env("BECU_PASSWORD"))
+        loginButton.click()
 
-    usernameInput.send_keys(env("BECU_USERNAME"))
-    passwordInput.send_keys(env("BECU_PASSWORD"))
-    loginButton.click()
-
-    account_table = waiter.wait_for("#AccountsBorder table.dataTableXtended")
-    rows = account_table.find_elements(By.TAG_NAME, "tr")
-    for row in rows:
-        cells = row.find_elements(By.TAG_NAME, "td")
-        if not cells:
-            continue
-        print(f"{cells[0].text}: {cells[2].text}")
+        account_table = waiter.wait_for("#AccountsBorder table.dataTableXtended")
+        rows = account_table.find_elements(By.TAG_NAME, "tr")
+        for row in rows:
+            cells = row.find_elements(By.TAG_NAME, "td")
+            if not cells:
+                continue
+            print(f"{cells[0].text}: {cells[2].text}")
 
 
 # --------------------------------------------------------------------
