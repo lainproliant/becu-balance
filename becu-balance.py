@@ -38,6 +38,12 @@ class Waiter:
             EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
         )
 
+    def wait_until_ready(self):
+        return self._wait.until(
+            lambda driver: driver.execute_script("return document.readyState")
+            == "complete"
+        )
+
 
 # --------------------------------------------------------------------
 def main():
@@ -50,13 +56,19 @@ def main():
         browser.get("https://onlinebanking.becu.org/BECUBankingWeb/Login.aspx")
 
         waiter = Waiter(browser)
-        usernameInput = waiter.wait_for("#ctlSignon_txtUserID")
-        passwordInput = waiter.wait_for("#ctlSignon_txtPassword")
-        loginButton = waiter.wait_for("#ctlSignon_btnLogin")
+        username_input = waiter.wait_for("#ctlSignon_txtUserID")
+        password_input = waiter.wait_for("#ctlSignon_txtPassword")
+        login_button = waiter.wait_for("#ctlSignon_btnLogin")
 
-        usernameInput.send_keys(env("BECU_USERNAME"))
-        passwordInput.send_keys(env("BECU_PASSWORD"))
-        loginButton.click()
+        username_input.send_keys(env("BECU_USERNAME"))
+        password_input.send_keys(env("BECU_PASSWORD"))
+        login_button.click()
+
+        waiter.wait_until_ready()
+
+        if "invitation" in browser.current_url.lower():
+            ask_later_button = waiter.wait_for("#ctlWorkflow_remind")
+            ask_later_button.click()
 
         account_table = waiter.wait_for("#AccountsBorder table.dataTableXtended")
         rows = account_table.find_elements(By.TAG_NAME, "tr")
