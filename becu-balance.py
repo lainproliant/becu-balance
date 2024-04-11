@@ -24,8 +24,13 @@ def env(key: str) -> str:
 
 
 # --------------------------------------------------------------------
+def default_timeout():
+    return int(os.environ.get("SELENIUM_TIMEOUT", "10"))
+
+
+# --------------------------------------------------------------------
 class Waiter:
-    def __init__(self, browser: webdriver.Firefox, timeout=10):
+    def __init__(self, browser: webdriver.Firefox, timeout=default_timeout()):
         self._wait = WebDriverWait(browser, timeout)
 
     def wait_for(self, css_selector: str) -> WebElement:
