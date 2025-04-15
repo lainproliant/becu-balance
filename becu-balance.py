@@ -7,6 +7,7 @@
 # --------------------------------------------------------------------
 
 import os
+import time
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -69,6 +70,8 @@ def main():
         if "invitation" in browser.current_url.lower():
             ask_later_button = waiter.wait_for("#ctlWorkflow_remind")
             ask_later_button.click()
+
+        time.sleep(2)
 
         account_table = waiter.wait_for("#AccountsBorder table.dataTableXtended")
         rows = account_table.find_elements(By.TAG_NAME, "tr")
