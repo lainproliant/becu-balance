@@ -10,10 +10,10 @@ selenium = "*"
 xeno = "*"
 
 [dev-packages]
-black = "*"
 neovim = "*"
 shortuuid = "*"
+black = "*"
 isort = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.13"

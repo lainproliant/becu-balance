@@ -8,13 +8,14 @@
 
 import os
 import time
+from typing import Any, Callable
 
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.remote.webdriver import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.remote.webdriver import WebElement
 
 
 # --------------------------------------------------------------------
@@ -33,6 +34,9 @@ def default_timeout():
 class Waiter:
     def __init__(self, browser: webdriver.Firefox, timeout=default_timeout()):
         self._wait = WebDriverWait(browser, timeout)
+
+    def wait_until(self, f: Callable[[Any], bool]):
+        return self._wait.until(f)
 
     def wait_for(self, css_selector: str) -> WebElement:
         return self._wait.until(
@@ -71,9 +75,17 @@ def main():
             ask_later_button = waiter.wait_for("#ctlWorkflow_remind")
             ask_later_button.click()
 
-        time.sleep(2)
+        waiter.wait_until_ready()
 
         account_table = waiter.wait_for("#AccountsBorder table.dataTableXtended")
+
+        waiter.wait_until(
+            lambda driver: account_table.find_elements(By.TAG_NAME, "tr")[
+                0
+            ].text.strip()
+            != ""
+        )
+
         rows = account_table.find_elements(By.TAG_NAME, "tr")
         for row in rows:
             cells = row.find_elements(By.TAG_NAME, "td")
